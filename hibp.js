@@ -3,6 +3,7 @@
 const got = require("got");
 
 const AppConstants = require("./app-constants");
+const breachImages = require("./breach-images");
 const { FluentError } = require("./locale-utils");
 const mozlog = require("./log");
 const pkg = require("./package.json");
@@ -81,11 +82,17 @@ const HIBP = {
   async loadBreachesIntoApp(app) {
     log.info("loadBreachesIntoApp");
     try {
+      const pngLogoList = await breachImages.makeLogoListForEmails();
       const breachesResponse = await this.req("/breaches");
       const breaches = [];
 
       for (const breach of breachesResponse.body) {
         // const breach = breachesResponse.body[breachIndex];
+ 
+        if (!pngLogoList.includes(`${breach.Name}.png`)) {
+           breachImages.getNewBreachImage(breach.Name, breach.LogoType);
+        }
+
         // convert data class strings to Fluent IDs
         breach.DataClasses = this.formatDataClassesArray(breach.DataClasses);
         breaches.push(breach);
